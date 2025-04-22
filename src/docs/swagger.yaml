@@ -1,0 +1,147 @@
+openapi: 3.0.0
+info:
+  title: Restaurant Reservation API
+  version: 1.0.0
+  description: API para gerenciar reservas de restaurantes
+
+paths:
+  /api/reservations:
+    post:
+      tags: [Reservations]
+      summary: criar nova reserva
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationCreate'
+            example:
+              customerName: "John Doe"
+              customerEmail: "john@example.com"
+              customerPhone: "+1234567890"
+              partySize: 4
+              startTime: "2025-04-02T12:00:00Z"
+              endTime: "2025-04-02T14:00:00Z"
+      responses:
+        201:
+          description: Reservation created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        400:
+          description: Invalid input data
+
+    get:
+      tags: [Reservations]
+      summary: Get all reservations
+      responses:
+        200:
+          description: List of all reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+
+  /api/operating-hours/available:
+    get:
+      tags: [Operating Hours]
+      summary: Pega os horarios disponiveis baseado nas outras reservas já feitas
+      parameters:
+        - in: query
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+          example: "2025-04-02"
+          description: Date to check availability (YYYY-MM-DD format)
+        - in: query
+          name: threshold
+          schema:
+            type: integer
+            default: 60
+          description: Time slot duration in minutes
+      responses:
+        200:
+          description: List of available time slots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeSlot'
+        400:
+          description: Missing or invalid date parameter
+
+components:
+  schemas:
+    ReservationCreate:
+      type: object
+      required:
+        - customerName
+        - customerEmail
+        - customerPhone
+        - partySize
+        - startTime
+        - endTime
+      properties:
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+          format: email
+        customerPhone:
+          type: string
+        partySize:
+          type: integer
+          minimum: 1
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: integer
+        customerName:
+          type: string
+        customerEmail:
+          type: string
+        customerPhone:
+          type: string
+        partySize:
+          type: integer
+        startTime:
+          type: string
+          format: date-time
+        endTime:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, confirmed, cancelled]
+        notes:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TimeSlot:
+      type: object
+      properties:
+        time:
+          type: string
+          example: "12:00"
+          description: Time in HH:MM format (UTC)
